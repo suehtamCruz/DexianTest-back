@@ -1,0 +1,6 @@
+@DexianTest_back_HostAddress = http://localhost:5172
+
+GET {{DexianTest_back_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
