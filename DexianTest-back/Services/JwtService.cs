@@ -25,9 +25,9 @@ namespace DexianTest_back.Services
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Name, user.Name),
+                new Claim(JwtRegisteredClaimNames.Name, user.SNome),
                 new Claim("userId", user.Id.ToString()),
-                new Claim("codUser", user.CodUser.ToString()),
+                new Claim("codUser", user.ICodUsuario.ToString()),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 

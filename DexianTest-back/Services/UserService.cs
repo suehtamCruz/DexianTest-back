@@ -33,7 +33,7 @@ namespace DexianTest_back.Services
 
         public async Task CreateAsync(NewUserModel user)
         {
-            var existingUser = await _userCollection.Find(x => x.CodUser == user.CodUser).FirstOrDefaultAsync();
+            var existingUser = await _userCollection.Find(x => x.ICodUsuario == user.CodUser).FirstOrDefaultAsync();
             if (existingUser != null)
             {
                 throw new InvalidOperationException($"Usuario com id {user.CodUser} já existe!");
@@ -43,10 +43,10 @@ namespace DexianTest_back.Services
 
             var userToAdd = new UserModel()
             {
-                CodUser = user.CodUser,
+                ICodUsuario = user.CodUser,
                 Id = ObjectId.GenerateNewId(),
-                Name = user.Name,
-                Pass = hashedPassword
+                SNome = user.Name,
+                SSenha = hashedPassword
             };
 
             await _userCollection.InsertOneAsync(userToAdd);
@@ -54,7 +54,7 @@ namespace DexianTest_back.Services
 
         public async Task<bool> UpdateAsync(int codUser, NewUserModel updatedUser)
         {
-            var existingUser = await _userCollection.Find(x => x.CodUser == codUser).FirstOrDefaultAsync();
+            var existingUser = await _userCollection.Find(x => x.ICodUsuario == codUser).FirstOrDefaultAsync();
             if (existingUser == null)
             {
                 throw new KeyNotFoundException($"Usuario com código {codUser} não encontrado!");
@@ -62,20 +62,20 @@ namespace DexianTest_back.Services
 
             if (updatedUser.Pass != null && updatedUser.Pass.Length >= 1)      
             { 
-                existingUser.Pass = _passwordService.HashPassword(updatedUser.Pass);
+                existingUser.SSenha = _passwordService.HashPassword(updatedUser.Pass);
             }
 
             if (updatedUser.Name != null && updatedUser.Name.Length >= 1)       
             {
-                existingUser.Name = updatedUser.Name;
+                existingUser.SNome = updatedUser.Name;
             }
 
             if (updatedUser.CodUser != 0)
             {
-                existingUser.CodUser = updatedUser.CodUser;
+                existingUser.ICodUsuario = updatedUser.CodUser;
             }
             
-            var result = await _userCollection.ReplaceOneAsync(x => x.CodUser == codUser, existingUser);
+            var result = await _userCollection.ReplaceOneAsync(x => x.ICodUsuario == codUser, existingUser);
             return result.IsAcknowledged && result.ModifiedCount > 0;
         }
 

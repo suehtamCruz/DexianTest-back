@@ -10,14 +10,13 @@ namespace DexianTest_back.Models
         public ObjectId? Id { get; set; }
 
         [BsonElement("sNome")]
-        public string Name { get; set; }
+        public string SNome { get; set; }
 
         [BsonElement("iCodUsuario")]
-        public int CodUser { get; set; }
+        public int ICodUsuario { get; set; }
 
         [BsonElement("sSenha")]
-        public string? Pass { get; set; }
-         
+        public string? SSenha { get; set; } 
   
     }
 }

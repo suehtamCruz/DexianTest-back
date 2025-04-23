@@ -24,14 +24,14 @@ namespace DexianTest_back.Controllers
         public async Task<IActionResult> Login([FromBody] LoginModel loginModel)
         { 
             var users = await _userService.GetAsync();
-            var user = users.FirstOrDefault(u => u.CodUser == loginModel.CodUser);
+            var user = users.FirstOrDefault(u => u.SNome == loginModel.Nome);
 
             if (user == null)
             {
                 return Unauthorized(new { message = "Credenciais inválidas" });
             }
  
-            bool isPasswordValid = _passwordService.VerifyPassword(loginModel.Password, user.Pass);
+            bool isPasswordValid = _passwordService.VerifyPassword(loginModel.Password, user.SSenha);
             
             if (!isPasswordValid)
             {
@@ -46,8 +46,8 @@ namespace DexianTest_back.Controllers
                 user = new
                 {
                     id = user.Id.ToString(),
-                    name = user.Name,
-                    codUser = user.CodUser
+                    name = user.SNome,
+                    codUser = user.ICodUsuario
                 }
             });
         }
