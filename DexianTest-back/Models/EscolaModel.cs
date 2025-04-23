@@ -10,9 +10,9 @@ namespace DexianTest_back.Models
         public ObjectId? Id { get; set; }
 
         [BsonElement("iCodEscola")]
-        public int Code { get; set; }
+        public int ICodEscola { get; set; }
 
         [BsonElement("sDescricao")]
-        public int Description { get; set; } 
+        public string SDescricao { get; set; } 
     }
 }

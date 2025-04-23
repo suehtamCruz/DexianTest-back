@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DexianTest_back.Interfaces;
+using DexianTest_back.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace DexianTest_back.Controllers
 {
@@ -6,12 +8,37 @@ namespace DexianTest_back.Controllers
     [Route("school")]
     public class SchoolController
     {
-        [HttpGet()]
-        public string GetAllSchools()
+
+        private readonly IEscolaService _escolaService;
+
+        public SchoolController(IEscolaService escolaService)
         {
-            return "Hello World";
+            _escolaService = escolaService;
         }
 
 
+        [HttpGet()]
+        public async Task<List<EscolaModel>>  GetAllSchools()
+        {
+            return await _escolaService.GetAsync();
+        }
+
+        [HttpPost]
+        public async Task CreateSchool([FromBody] NewEscolaModel escola)
+        {
+           await _escolaService.CreateAsync(escola); 
+        }
+
+        [HttpDelete("{codEscola}")]
+        public async Task DeleteSchool(int codEscola)
+        {
+            await _escolaService.DeleteAsync(codEscola);
+        }
+
+        [HttpPut("{codEscola}")]
+        public async Task UpdateSchool(int codEscola, [FromBody] NewEscolaModel escola)
+        {
+            await _escolaService.UpdateAsync(codEscola, escola);
+        }
     }
 }
