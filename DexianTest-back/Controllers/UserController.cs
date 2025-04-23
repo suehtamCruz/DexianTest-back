@@ -1,11 +1,12 @@
-using DexianTest_back.Models;
-using DexianTest_back.Services;
+using DexianTest_back.Models; 
 using Microsoft.AspNetCore.Mvc;
 using DexianTest_back.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DexianTest_back.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("user")]
     public class UserController
     {

@@ -1,10 +1,12 @@
 ﻿using DexianTest_back.Interfaces;
 using DexianTest_back.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DexianTest_back.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("students")]
     public class StudentsController
     {

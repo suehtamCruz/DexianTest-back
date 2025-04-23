@@ -11,8 +11,9 @@ namespace DexianTest_back.Services
     public class UserService : IUserService
     {
         private readonly IMongoCollection<UserModel> _userCollection;
+        private readonly IPasswordService _passwordService;
 
-        public UserService(IOptions<DataBaseModel> databaseSettings)
+        public UserService(IOptions<DataBaseModel> databaseSettings, IPasswordService passwordService)
         {
             var mongoClient = new MongoClient(
                 databaseSettings.Value.ConnectionString);
@@ -20,7 +21,8 @@ namespace DexianTest_back.Services
             var mongoDatabase = mongoClient.GetDatabase(
                 databaseSettings.Value.DatabaseName);
 
-            _userCollection = mongoDatabase.GetCollection<UserModel>("User");   
+            _userCollection = mongoDatabase.GetCollection<UserModel>("User");
+            _passwordService = passwordService;
         }
 
         public async Task<List<UserModel>> GetAsync() =>
@@ -36,13 +38,15 @@ namespace DexianTest_back.Services
             {
                 throw new InvalidOperationException($"Usuario com id {user.CodUser} já existe!");
             }
+ 
+            string hashedPassword = _passwordService.HashPassword(user.Pass);
 
             var userToAdd = new UserModel()
             {
                 CodUser = user.CodUser,
                 Id = ObjectId.GenerateNewId(),
                 Name = user.Name,
-                Pass = user.Pass
+                Pass = hashedPassword
             };
 
             await _userCollection.InsertOneAsync(userToAdd);
@@ -57,8 +61,8 @@ namespace DexianTest_back.Services
             }
 
             if (updatedUser.Pass != null && updatedUser.Pass.Length >= 1)      
-            {
-                existingUser.Pass = updatedUser.Pass;
+            { 
+                existingUser.Pass = _passwordService.HashPassword(updatedUser.Pass);
             }
 
             if (updatedUser.Name != null && updatedUser.Name.Length >= 1)       
