@@ -24,9 +24,21 @@ namespace DexianTest_back.Controllers
         }
 
         [HttpPost]
-        public async Task CreateUser([FromBody] INewUser user)
+        public async Task CreateUser([FromBody] NewUserModel user)
         {
              await _userService.CreateAsync(user); 
+        }
+
+        [HttpPut("{codUser}")]
+        public async Task UpdateUser(int codUser, [FromBody] NewUserModel user)
+        {
+            await _userService.UpdateAsync(codUser, user);
+        }
+
+        [HttpDelete("{codUser}")]
+        public async Task DeleteUser(string id)
+        {
+            await _userService.DeleteAsync(id);
         }
     }
 }

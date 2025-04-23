@@ -6,8 +6,8 @@ namespace DexianTest_back.Interfaces
     { 
         Task<List<UserModel>> GetAsync(); 
         Task<UserModel?> GetByIdAsync(string id); 
-        Task CreateAsync(INewUser user); 
-        Task<bool> UpdateAsync(string id, INewUser user); 
+        Task CreateAsync(NewUserModel user); 
+        Task<bool> UpdateAsync(int codUser, NewUserModel user); 
         Task<bool> DeleteAsync(string id);
     }
 }
