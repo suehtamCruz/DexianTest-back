@@ -3,6 +3,7 @@ using DexianTest_back.Models;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 
 namespace DexianTest_back.Services
 {
@@ -87,6 +88,19 @@ namespace DexianTest_back.Services
             var result = _escolaCollection.ReplaceOne(x => x.ICodEscola == codEscola, existingEscola);
 
             return Task.FromResult(result.IsAcknowledged && result.ModifiedCount > 0);
+        }
+
+        public async Task<List<EscolaModel>> GetByDescription(string desc)
+        {
+            var escolas = await _escolaCollection.AsQueryable().Where(x => x.SDescricao.Contains(desc))
+                .ToListAsync();
+            if (escolas == null)
+            {
+                throw new KeyNotFoundException($"Escola não encontrada!");
+            }
+
+            return escolas;
+
         }
     }
 }

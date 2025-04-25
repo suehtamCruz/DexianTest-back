@@ -9,5 +9,6 @@ namespace DexianTest_back.Interfaces
         Task CreateAsync(NewAlunoModel aluno);
         Task<bool> UpdateAsync(int codAluno, NewAlunoModel aluno);
         Task<bool> DeleteAsync(int codAluno);
+        Task<List<AlunoModel>> GetByName(string name);
     }
 }

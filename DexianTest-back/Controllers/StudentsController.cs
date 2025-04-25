@@ -40,5 +40,12 @@ namespace DexianTest_back.Controllers
         {
             await _alunoService.DeleteAsync(codAluno);
         }
+
+        [HttpGet("find-by-name")]
+        public async Task<List<AlunoModel>> GetStudentByName([FromQuery] string name)
+        {
+            return await _alunoService.GetByName(name);
+        }
+         
     }
 }

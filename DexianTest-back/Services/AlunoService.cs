@@ -22,7 +22,7 @@ namespace DexianTest_back.Services
         }
 
         public async Task CreateAsync(NewAlunoModel aluno)
-        { 
+        {
             var alunoModel = new AlunoModel
             {
                 Id = ObjectId.GenerateNewId(),
@@ -59,13 +59,13 @@ namespace DexianTest_back.Services
         }
 
         public async Task<bool> UpdateAsync(int codAluno, NewAlunoModel aluno)
-        { 
-             var existingAluno = await _alunoCollection.Find(x => x.CodAluno == codAluno).FirstOrDefaultAsync();
+        {
+            var existingAluno = await _alunoCollection.Find(x => x.CodAluno == codAluno).FirstOrDefaultAsync();
             if (existingAluno == null)
             {
                 throw new KeyNotFoundException($"Aluno com código {codAluno} não encontrado!");
             }
- 
+
             if (!string.IsNullOrWhiteSpace(aluno.Nome))
             {
                 existingAluno.Nome = aluno.Nome;
@@ -80,7 +80,7 @@ namespace DexianTest_back.Services
             {
                 existingAluno.DataNascimento = aluno.DataNascimento;
             }
- 
+
             if (!string.IsNullOrWhiteSpace(aluno.CPF))
             {
                 existingAluno.CPF = aluno.CPF;
@@ -102,6 +102,25 @@ namespace DexianTest_back.Services
             }
             var result = await _alunoCollection.ReplaceOneAsync(x => x.CodAluno == codAluno, existingAluno);
             return result.IsAcknowledged && result.ModifiedCount > 0;
+        }
+
+        public async Task<List<AlunoModel>> GetByName(string nameOrCpf)
+        {
+            var alunos = new List<AlunoModel>();
+
+            bool isNumber = int.TryParse(nameOrCpf, out int numericValue);
+            if (isNumber) {
+                alunos = await _alunoCollection.Find(x => x.CPF.Contains(nameOrCpf)).ToListAsync();
+            } else
+            {
+                alunos = await _alunoCollection.Find(x => x.Nome.ToLower().Contains(nameOrCpf.ToLower())).ToListAsync();
+            }
+            
+            if (alunos == null)
+            {
+                throw new KeyNotFoundException($"Nenhum aluno encontrado");
+            }
+            return alunos;
         }
     }
 }

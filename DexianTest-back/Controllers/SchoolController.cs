@@ -42,5 +42,11 @@ namespace DexianTest_back.Controllers
         {
             await _escolaService.UpdateAsync(codEscola, escola);
         }
+
+        [HttpGet("find-by-desc")]
+        public async Task<List<EscolaModel>> GetByDescription([FromQuery] string desc)
+        {
+            return await _escolaService.GetByDescription(desc);
+        }
     }
 }
