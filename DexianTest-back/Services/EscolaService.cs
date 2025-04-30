@@ -1,106 +1,95 @@
-﻿using DexianTest_back.Interfaces;
+using DexianTest_back.Interfaces;
 using DexianTest_back.Models;
-using Microsoft.Extensions.Options;
-using MongoDB.Bson;
-using MongoDB.Driver;
-using MongoDB.Driver.Linq;
+using System.Collections.Generic;
 
 namespace DexianTest_back.Services
-{
+{ 
     public class EscolaService : IEscolaService
-    {
-        private readonly IMongoCollection<EscolaModel> _escolaCollection;
+    { 
+        private static readonly List<EscolaModel> _escolasStatic = new List<EscolaModel>();
+         
+        private readonly List<EscolaModel> _escolas;
 
-        public EscolaService (IOptions<DataBaseModel> databaseSettings)
-        {
-            var mongoClient = new MongoClient(
-               databaseSettings.Value.ConnectionString);
-
-            var mongoDatabase = mongoClient.GetDatabase(
-                databaseSettings.Value.DatabaseName);
-
-            _escolaCollection = mongoDatabase.GetCollection<EscolaModel>("School");
+        public EscolaService()
+        { 
+            _escolas = _escolasStatic;
         }
 
         public async Task CreateAsync(NewEscolaModel escola)
         {
-            var existingEscola = _escolaCollection.Find(x => x.ICodEscola == escola.Code).FirstOrDefault();
-            if (existingEscola != null)
+            if (_escolas.Any(x => x.ICodEscola == escola.Code))
             {
                 throw new InvalidOperationException($"Escola com id {escola.Code} já existe!");
             }
+            
             var newSchool = new EscolaModel
             {
                 ICodEscola = escola.Code,
                 SDescricao = escola.Description,
-                Id = ObjectId.GenerateNewId()
+                Id = Guid.NewGuid().ToString()
             };
 
-            await _escolaCollection.InsertOneAsync(newSchool);
+            _escolas.Add(newSchool);
+            
+            await Task.CompletedTask;
         }
 
         public async Task<bool> DeleteAsync(int codEscola)
         {
-            var existingEscola = await _escolaCollection.FindAsync(x => x.ICodEscola == codEscola);
-            if (existingEscola == null)
+            var escola = _escolas.Find(x => x.ICodEscola == codEscola);
+            if (escola == null)
             {
                 throw new KeyNotFoundException($"Escola com código {codEscola} não encontrada!");
             }
 
-            var result = await _escolaCollection.DeleteOneAsync(x => x.ICodEscola == codEscola);
-
-            return result.IsAcknowledged && result.DeletedCount > 0;
+            _escolas.Remove(escola);
+            
+            return true;
         }
 
         public async Task<List<EscolaModel>> GetAsync()
         {
-            return await _escolaCollection.Find(_ => true).ToListAsync();
-        }
-
-        public Task<EscolaModel> GetByIdAsync(string id)
-        {
-            var escola = _escolaCollection.Find(x => x.Id == ObjectId.Parse(id)).FirstOrDefault();
-            if (escola == null)
-            {
-                throw new KeyNotFoundException($"Escola com id {id} não encontrada!");
-            }
-
-            return Task.FromResult(escola);
+            return await Task.FromResult(_escolas);
         }
 
         public Task<bool> UpdateAsync(int codEscola, NewEscolaModel escola)
         {
-            var existingEscola = _escolaCollection.Find(x => x.ICodEscola == codEscola).FirstOrDefault();
-
+            var existingEscola = _escolas.Find(x => x.ICodEscola == codEscola);
             if (existingEscola == null)
             {
                 throw new KeyNotFoundException($"Escola com código {codEscola} não encontrada!");
             }
 
-            if (escola.Code != 0)
-            {
+            if (escola.Code != 0 && escola.Code != codEscola)
+            { 
+                if (_escolas.Any(x => x.ICodEscola == escola.Code))
+                {
+                    throw new InvalidOperationException($"Escola com código {escola.Code} já existe!");
+                }
+                
                 existingEscola.ICodEscola = escola.Code;
             }
+            
             if (!string.IsNullOrWhiteSpace(escola.Description))
             {
                 existingEscola.SDescricao = escola.Description;
             }
-            var result = _escolaCollection.ReplaceOne(x => x.ICodEscola == codEscola, existingEscola);
-
-            return Task.FromResult(result.IsAcknowledged && result.ModifiedCount > 0);
+            
+            return Task.FromResult(true);
         }
 
         public async Task<List<EscolaModel>> GetByDescription(string desc)
         {
-            var escolas = await _escolaCollection.AsQueryable().Where(x => x.SDescricao.Contains(desc))
-                .ToListAsync();
-            if (escolas == null)
+            var escolas = _escolas
+                .Where(x => x.SDescricao.Contains(desc))
+                .ToList();
+                
+            if (escolas.Count == 0)
             {
                 throw new KeyNotFoundException($"Escola não encontrada!");
             }
-
-            return escolas;
-
+            
+            return await Task.FromResult(escolas);
         }
     }
 }

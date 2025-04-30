@@ -1,28 +1,21 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+using System;
 
 namespace DexianTest_back.Models
 {
     public class NewAlunoModel
     {
-        [BsonElement("iCodAluno")]
-        public int CodAluno { get; set; }
+        public int? CodAluno { get; set; }
 
-        [BsonElement("sNome")]
-        public string Nome { get; set; }
+        public string? Nome { get; set; }
 
-        [BsonElement("dNascimento")]
-        public DateTime DataNascimento { get; set; }
+        public DateTime? DataNascimento { get; set; }
 
-        [BsonElement("sCPF")]
-        public string CPF { get; set; }
+        public string? CPF { get; set; }
 
-        [BsonElement("sEndereco")]
-        public string Endereco { get; set; }
+        public string? Endereco { get; set; }
 
-        [BsonElement("sCelular")]
-        public string Celular { get; set; }
+        public string? Celular { get; set; }
 
-        [BsonElement("iCodEscola")]
-        public int CodEscola { get; set; }
+        public int? CodEscola { get; set; }
     }
 }

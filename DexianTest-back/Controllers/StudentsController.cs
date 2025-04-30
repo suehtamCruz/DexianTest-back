@@ -29,10 +29,10 @@ namespace DexianTest_back.Controllers
             await _alunoService.CreateAsync(aluno);
         }
 
-        [HttpPut("{codAluno}")]
-        public async Task UpdateStudent(int codAluno, [FromBody] NewAlunoModel aluno)
+        [HttpPut("{idAluno}")]
+        public async Task UpdateStudent(string idAluno, [FromBody] NewAlunoModel aluno)
         {
-            await _alunoService.UpdateAsync(codAluno, aluno);
+            await _alunoService.UpdateAsync(idAluno, aluno);
         }
 
         [HttpDelete("{codAluno}")]

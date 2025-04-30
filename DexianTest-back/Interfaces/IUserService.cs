@@ -4,10 +4,9 @@ namespace DexianTest_back.Interfaces
 {
     public interface IUserService
     { 
-        Task<List<UserModel>> GetAsync(); 
-        Task<UserModel?> GetByIdAsync(string id); 
+        Task<List<UserModel>> GetAsync();  
         Task CreateAsync(NewUserModel user); 
         Task<bool> UpdateAsync(int codUser, NewUserModel user); 
-        Task<bool> DeleteAsync(string id);
+        Task<bool> DeleteAsync(int codUser);
     }
 }

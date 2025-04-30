@@ -1,31 +1,28 @@
 using DexianTest_back.Interfaces;
 using DexianTest_back.Models;
-using Microsoft.Extensions.Options;
-using MongoDB.Bson;
-using MongoDB.Driver;
+using System.Collections.Generic;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace DexianTest_back.Services
 {
     public class AlunoService : IAlunoService
-    {
-        private readonly IMongoCollection<AlunoModel> _alunoCollection;
-
-        public AlunoService(IOptions<DataBaseModel> databaseSettings)
-        {
-            var mongoClient = new MongoClient(
-                databaseSettings.Value.ConnectionString);
-
-            var mongoDatabase = mongoClient.GetDatabase(
-                databaseSettings.Value.DatabaseName);
-
-            _alunoCollection = mongoDatabase.GetCollection<AlunoModel>("Student");
+    {  
+        private static readonly List<AlunoModel> _alunosStatic = new List<AlunoModel>();
+         
+        private readonly List<AlunoModel> _alunos;
+        
+        public AlunoService()
+        { 
+            _alunos = _alunosStatic;
         }
 
         public async Task CreateAsync(NewAlunoModel aluno)
         {
             var alunoModel = new AlunoModel
             {
-                Id = ObjectId.GenerateNewId(),
+                Id = Guid.NewGuid().ToString(),
                 CodAluno = aluno.CodAluno,
                 Nome = aluno.Nome,
                 DataNascimento = aluno.DataNascimento,
@@ -34,36 +31,41 @@ namespace DexianTest_back.Services
                 Celular = aluno.Celular,
                 CodEscola = aluno.CodEscola
             };
+             
+            if (_alunos.Find(x => x.CodAluno == aluno.CodAluno) != null)
+            {
+                throw new InvalidOperationException($"Aluno com código {alunoModel.CodAluno} já existe!");
+            }
 
-            await _alunoCollection.InsertOneAsync(alunoModel);
+            _alunos.Add(alunoModel);
+
+            await Task.CompletedTask;
         }
 
         public async Task<bool> DeleteAsync(int codAluno)
         {
-            var existingAluno = await _alunoCollection.Find(x => x.CodAluno == codAluno).FirstOrDefaultAsync();
-            if (existingAluno == null)
+            var aluno = _alunos.Find(x => x.CodAluno == codAluno);
+            if (aluno == null)
             {
                 throw new KeyNotFoundException($"Aluno com código {codAluno} não encontrado!");
             }
-            var result = await _alunoCollection.DeleteOneAsync(x => x.CodAluno == codAluno);
-            return result.IsAcknowledged && result.DeletedCount > 0;
+
+            _alunos.Remove(aluno);
+            
+            return true;
         }
 
         public async Task<List<AlunoModel>> GetAsync()
         {
-            return await _alunoCollection.Find(_ => true).ToListAsync();
-        }
-        public async Task<AlunoModel?> GetByIdAsync(string id)
-        {
-            return await _alunoCollection.Find(x => x.Id == ObjectId.Parse(id)).FirstOrDefaultAsync();
+            return _alunos;
         }
 
-        public async Task<bool> UpdateAsync(int codAluno, NewAlunoModel aluno)
+        public async Task<bool> UpdateAsync(string id, NewAlunoModel aluno)
         {
-            var existingAluno = await _alunoCollection.Find(x => x.CodAluno == codAluno).FirstOrDefaultAsync();
+            var existingAluno = _alunos.Find(x => x.Id == id);
             if (existingAluno == null)
             {
-                throw new KeyNotFoundException($"Aluno com código {codAluno} não encontrado!");
+                throw new KeyNotFoundException($"Aluno com código {id} não encontrado!");
             }
 
             if (!string.IsNullOrWhiteSpace(aluno.Nome))
@@ -71,8 +73,13 @@ namespace DexianTest_back.Services
                 existingAluno.Nome = aluno.Nome;
             }
 
-            if (aluno.CodAluno != 0)
-            {
+            if (aluno.CodAluno != 0 && aluno.CodAluno != null)
+            {  
+                if (_alunos.Any(x => x.CodAluno == aluno.CodAluno))
+                {
+                    throw new InvalidOperationException($"Aluno com código {aluno.CodAluno} já existe!");
+                }
+                
                 existingAluno.CodAluno = aluno.CodAluno;
             }
 
@@ -100,8 +107,8 @@ namespace DexianTest_back.Services
             {
                 existingAluno.CodEscola = aluno.CodEscola;
             }
-            var result = await _alunoCollection.ReplaceOneAsync(x => x.CodAluno == codAluno, existingAluno);
-            return result.IsAcknowledged && result.ModifiedCount > 0;
+            
+            return true;
         }
 
         public async Task<List<AlunoModel>> GetByName(string nameOrCpf)
@@ -109,17 +116,24 @@ namespace DexianTest_back.Services
             var alunos = new List<AlunoModel>();
 
             bool isNumber = int.TryParse(nameOrCpf, out int numericValue);
-            if (isNumber) {
-                alunos = await _alunoCollection.Find(x => x.CPF.Contains(nameOrCpf)).ToListAsync();
-            } else
+            if (isNumber) 
             {
-                alunos = await _alunoCollection.Find(x => x.Nome.ToLower().Contains(nameOrCpf.ToLower())).ToListAsync();
+                alunos = _alunos
+                    .Where(x => x.CPF.Contains(nameOrCpf))
+                    .ToList();
+            } 
+            else
+            {
+                alunos = _alunos
+                    .Where(x => x.Nome.ToLower().Contains(nameOrCpf.ToLower()))
+                    .ToList();
             }
             
-            if (alunos == null)
+            if (alunos.Count == 0)
             {
                 throw new KeyNotFoundException($"Nenhum aluno encontrado");
             }
+            
             return alunos;
         }
     }

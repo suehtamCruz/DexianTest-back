@@ -1,21 +1,15 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
-using MongoDB.Bson;
+using System;
 
 namespace DexianTest_back.Models
 {
     public class UserModel
     {
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public ObjectId? Id { get; set; }
+        public string Id { get; set; }
 
-        [BsonElement("sNome")]
         public string SNome { get; set; }
 
-        [BsonElement("iCodUsuario")]
         public int ICodUsuario { get; set; }
 
-        [BsonElement("sSenha")]
         public string? SSenha { get; set; } 
   
     }

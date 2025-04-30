@@ -1,40 +1,45 @@
-using MongoDB.Driver; 
-using MongoDB.Driver.Linq;
-using Microsoft.Extensions.Options;
 using DexianTest_back.Models;
-using DexianTest_back.Interfaces;
-using MongoDB.Bson;
+using DexianTest_back.Interfaces; 
+using System.Collections.Generic;
 using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace DexianTest_back.Services
 {
     public class UserService : IUserService
-    {
-        private readonly IMongoCollection<UserModel> _userCollection;
+    { 
+        private static readonly List<UserModel> _usersStatic = new List<UserModel>();
+          
+        private readonly List<UserModel> _users;
         private readonly IPasswordService _passwordService;
 
-        public UserService(IOptions<DataBaseModel> databaseSettings, IPasswordService passwordService)
+        public UserService(IPasswordService passwordService)
         {
-            var mongoClient = new MongoClient(
-                databaseSettings.Value.ConnectionString);
-
-            var mongoDatabase = mongoClient.GetDatabase(
-                databaseSettings.Value.DatabaseName);
-
-            _userCollection = mongoDatabase.GetCollection<UserModel>("User");
+            _users = _usersStatic;
             _passwordService = passwordService;
+             
+            if (_users.Count == 0)
+            {
+                var testUser = new UserModel() 
+                {  
+                    ICodUsuario = 0, 
+                    SNome = "Teste", 
+                    SSenha = _passwordService.HashPassword("123"), 
+                    Id = Guid.NewGuid().ToString() 
+                };
+                _users.Add(testUser);
+            }
         }
 
-        public async Task<List<UserModel>> GetAsync() =>
-            await _userCollection.Find(_ => true).ToListAsync();
-
-        public async Task<UserModel?> GetByIdAsync(string id) =>
-            await _userCollection.Find(x => x.Id == ObjectId.Parse(id)).FirstOrDefaultAsync();
-
-        public async Task CreateAsync(NewUserModel user)
+        public Task<List<UserModel>> GetAsync() 
         {
-            var existingUser = await _userCollection.Find(x => x.ICodUsuario == user.CodUser).FirstOrDefaultAsync();
-            if (existingUser != null)
+            return Task.FromResult(_users);
+        }
+
+        public Task CreateAsync(NewUserModel user)
+        {
+            if (_users.Any(x => x.ICodUsuario == user.CodUser))
             {
                 throw new InvalidOperationException($"Usuario com id {user.CodUser} já existe!");
             }
@@ -44,17 +49,19 @@ namespace DexianTest_back.Services
             var userToAdd = new UserModel()
             {
                 ICodUsuario = user.CodUser,
-                Id = ObjectId.GenerateNewId(),
+                Id = Guid.NewGuid().ToString(),
                 SNome = user.Name,
                 SSenha = hashedPassword
             };
 
-            await _userCollection.InsertOneAsync(userToAdd);
+            _users.Add(userToAdd);
+            
+            return Task.CompletedTask;
         }
 
-        public async Task<bool> UpdateAsync(int codUser, NewUserModel updatedUser)
+        public Task<bool> UpdateAsync(int codUser, NewUserModel updatedUser)
         {
-            var existingUser = await _userCollection.Find(x => x.ICodUsuario == codUser).FirstOrDefaultAsync();
+            var existingUser = _users.Find(x => x.ICodUsuario == codUser);
             if (existingUser == null)
             {
                 throw new KeyNotFoundException($"Usuario com código {codUser} não encontrado!");
@@ -70,25 +77,30 @@ namespace DexianTest_back.Services
                 existingUser.SNome = updatedUser.Name;
             }
 
-            if (updatedUser.CodUser != 0)
-            {
+            if (updatedUser.CodUser != 0 && updatedUser.CodUser != codUser)
+            { 
+                if (_users.Any(x => x.ICodUsuario == updatedUser.CodUser))
+                {
+                    throw new InvalidOperationException($"Usuario com código {updatedUser.CodUser} já existe!");
+                }
+                
                 existingUser.ICodUsuario = updatedUser.CodUser;
             }
             
-            var result = await _userCollection.ReplaceOneAsync(x => x.ICodUsuario == codUser, existingUser);
-            return result.IsAcknowledged && result.ModifiedCount > 0;
+            return Task.FromResult(true);
         }
 
-        public async Task<bool> DeleteAsync(string id)
+        public Task<bool> DeleteAsync(int codUser)
         {
-            var existingUser = await _userCollection.Find(x => x.Id == ObjectId.Parse(id)).FirstOrDefaultAsync();
-            if (existingUser == null)
+            var user = _users.Find(x => x.ICodUsuario == codUser);
+            if (user == null)
             {
-                throw new KeyNotFoundException($"Usuario com id {id} não encontrado!");
+                throw new KeyNotFoundException($"Usuario com id {codUser} não encontrado!");
             }
             
-            var result = await _userCollection.DeleteOneAsync(x => x.Id == ObjectId.Parse(id));
-            return result.IsAcknowledged && result.DeletedCount > 0;
+            _users.Remove(user);
+            
+            return Task.FromResult(true);
         }
     }
 }

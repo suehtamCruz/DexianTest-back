@@ -39,7 +39,7 @@ namespace DexianTest_back.Controllers
         [HttpDelete("{codUser}")]
         public async Task DeleteUser(string id)
         {
-            await _userService.DeleteAsync(id);
+            await _userService.DeleteAsync(int.Parse(id));
         }
     }
 }
